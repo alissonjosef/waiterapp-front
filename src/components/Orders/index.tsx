@@ -1,53 +1,49 @@
+import { useEffect, useState } from "react";
 import { Order } from "../../types/Order";
 import { OrdersBoard } from "../OrdersBoard";
 import {  Container } from "./style";
+import { api } from "../../utils/api";
 
-const orders: Order[] = [
-  {
-    '_id': '39239429asasa91919',
-    'table': '124',
-    'status': 'WAITING',
-    'items': [
-      {
-      'product':{
-        'name': 'Pizza quatro queijo',
-        'imagePath': '1668650622462-quatro-queijos.png',
-        'price': 20,
-      },
-      'quantity': 3,
-      '_id': '4534sdr929k23k3k2kkkk'
-      },
-      {
-        'product':{
-          'name': 'Coca-cola',
-          'imagePath': '1668650622462-quatro-queijos.png',
-          'price': 10
-        },
-        'quantity': 7,
-      '_id': '4534sdr929k23k3k2kkkk'
-      },
-
-    ]
-  }
-]
 
 export function Orders() {
+
+  const [orders, setOrders] = useState<Order[]>([])
+
+  useEffect(()=> {
+    api.get('/orders')
+    .then(({data}) => {
+      setOrders(data)
+    })
+  }, [])
+
+
+  const waiting = orders.filter((order) => order.status === "WAITING" )
+  const inProduction = orders.filter((order) => order.status === "IN_PRODUCTION" )
+  const done = orders.filter((order) => order.status === "DONE" )
+
+  function handleCancelOrder(orderId: string){
+    setOrders((prevState) => prevState.filter((order) => order._id === orderId))
+  }
+
   return (
     <Container>
       <OrdersBoard
         icon="🕑"
         title="Fila de espera"
-        orders={orders}
+        orders={waiting}
+        onCancelOrder={handleCancelOrder}
         />
       <OrdersBoard
         icon="🍻"
-        title="Fila de espera"
-        orders={[]}
+        title="Em preparação"
+        orders={inProduction}
+        onCancelOrder={handleCancelOrder}
         />
       <OrdersBoard
-        icon="🍕"
-        title="Fila de espera"
-        orders={[]}
+        icon="✅"
+        title="Pronto!"
+        orders={done}
+        onCancelOrder={handleCancelOrder}
         />
     </Container>
   );

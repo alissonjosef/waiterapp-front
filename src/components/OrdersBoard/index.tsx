@@ -2,21 +2,25 @@ import { useState } from "react";
 import { Order } from "../../types/Order";
 import { OrderModal } from "../OrderModal";
 import { Board, OrderContainer } from "./style";
+import { api } from "../../utils/api";
+import { toast } from  'react-toastify'
 
 interface OrdersBoardProps {
   icon: string;
   title: string;
   orders: Order[];
+  onCancelOrder: (orderId:string) => void;
 }
 
-export function OrdersBoard({ icon, title, orders }: OrdersBoardProps) {
+
+export function OrdersBoard({ icon, title, orders, onCancelOrder }: OrdersBoardProps) {
   const [open, setOpen] = useState(false);
-  const [close, setClose] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<null | Order>(null);
+  const [isLoanding, setIsLoanding] = useState(false)
 
   function handleOperOrder(order: Order) {
-    setOpen(true);
     setSelectedOrder(order);
+    setOpen(true);
   }
 
   function handleClose() {
@@ -24,13 +28,29 @@ export function OrdersBoard({ icon, title, orders }: OrdersBoardProps) {
     setSelectedOrder(null);
   }
 
+  async function handleCancelOrder() {
+    setIsLoanding(true)
+
+    await new Promise((resolve, reject) => setTimeout(resolve, 3000))
+    await api.delete(`/orders/${selectedOrder?._id}`)
+
+    toast.success(`O pedido da mesa ${selectedOrder?.table} foi cancelado`)
+
+    onCancelOrder(selectedOrder!._id)
+    setIsLoanding(false)
+    setOpen(false)
+
+  }
+
   return (
     <>
       <Board>
         <OrderModal
-        visible={open}
-        order={selectedOrder}
-        onClose={handleClose}
+          onCancelOrder={handleCancelOrder}
+          visible={open}
+          order={selectedOrder}
+          onClose={handleClose}
+          isLoanding={isLoanding}
         />
         <header>
           <span>{icon}</span>
@@ -47,7 +67,7 @@ export function OrdersBoard({ icon, title, orders }: OrdersBoardProps) {
                 key={order._id}
               >
                 <strong>Mesa {order.table}</strong>
-                <span>{order.items.length} itens</span>
+                <span>{order.products.length} itens</span>
               </button>
             ))}
           </OrderContainer>

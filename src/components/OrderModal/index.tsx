@@ -1,28 +1,30 @@
 import { useEffect } from "react";
 import close from "../../assets/images/close-icon.svg";
 import { Order } from "../../types/Order";
-import { formatCurrency } from "../../utils/formatCUrrency";
+import { formatCurrency } from "../../utils/formatCurrency";
 
 import { Actions, ModalBody, OrderDetails, Overlay } from "./style";
 interface OrderModalProp {
   visible: boolean;
   order: null | Order;
   onClose: () => void;
+  onCancelOrder: () => Promise<void>;
+  isLoanding: boolean;
 }
 
-export function OrderModal({ visible, order, onClose}: OrderModalProp) {
-  useEffect(()  => {
-    function handleKeyDown(event: KeyboardEvent){
-      if(event.key  ===   'Escape'){
+export function OrderModal({ visible, order, onClose, onCancelOrder, isLoanding }: OrderModalProp) {
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
         onClose()
       }
     }
     document.addEventListener('keydown', handleKeyDown)
 
-    return () =>  {
+    return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  },[onClose])
+  }, [onClose])
   if (!visible || !order) {
     return null;
   }
@@ -33,8 +35,8 @@ export function OrderModal({ visible, order, onClose}: OrderModalProp) {
     total += product.price * quantity
   }) */
 
-  const total = order.items.reduce((acc, { product, quantity }) => {
-   return acc + product.price * quantity;
+  const total = order.products.reduce((acc, { product, quantity }) => {
+    return acc + product.price * quantity;
   }, 0);
 
   return (
@@ -65,7 +67,7 @@ export function OrderModal({ visible, order, onClose}: OrderModalProp) {
         <OrderDetails>
           <strong>Itens</strong>
           <div className="order-item">
-            {order.items.map(({ _id, product, quantity }) => (
+            {order.products.map(({ _id, product, quantity }) => (
               <div key={_id} className="item">
                 <img
                   src={`http://localhost:3001/uploads/${product.imagePath}`}
@@ -90,14 +92,14 @@ export function OrderModal({ visible, order, onClose}: OrderModalProp) {
         </OrderDetails>
 
         <Actions>
-              <button type="button" className="primary">
-                <span>🧑‍🍳</span>
-                <strong>Iniciar Produção</strong>
-              </button>
+          <button type="button" className="primary" disabled={isLoanding}>
+            <span>🧑‍🍳</span>
+            <strong>Iniciar Produção</strong>
+          </button>
 
-              <button type="button" className="secondary">
-                Cancelar Pedido
-              </button>
+          <button onClick={onCancelOrder} type="button" className="secondary" disabled={isLoanding}>
+            Cancelar Pedido
+          </button>
         </Actions>
       </ModalBody>
     </Overlay>
